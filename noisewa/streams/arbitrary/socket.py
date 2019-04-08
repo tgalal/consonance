@@ -3,7 +3,7 @@ from socket import socket
 from noisewa.streams.arbitrary.arbitrary import ArbitraryStream
 
 
-class SocketDynamicStream(ArbitraryStream):
+class SocketArbitraryStream(ArbitraryStream):
     def __init__(self, socket):
         """
         :param socket:
