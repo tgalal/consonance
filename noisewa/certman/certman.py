@@ -1,4 +1,4 @@
-from dissononce.dh.key_public import PublicKey
+from dissononce.dh.x25519.x25519 import PublicKey
 from noisewa.proto import wa20_pb2
 import logging
 logger = logging.getLogger(__file__)

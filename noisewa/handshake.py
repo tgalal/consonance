@@ -1,23 +1,26 @@
 import random
 
-from dissononce.processing.handshakestate import HandshakeState
+from dissononce.processing.impl.handshakestate import HandshakeState
+from dissononce.processing.extensions.handshakestate_guarded import GuardedHandshakeState
+from dissononce.processing.extensions.handshakestate_switchable import SwitchableHandshakeState
 from dissononce.processing.handshakepatterns.handshakepattern import HandshakePattern
-from dissononce.processing.handshakepatterns.ik import IKHandshakePattern
-from dissononce.processing.handshakepatterns.xx import XXHandshakePattern
+from dissononce.processing.handshakepatterns.interactive.IK import IKHandshakePattern
+from dissononce.processing.handshakepatterns.interactive.XX import XXHandshakePattern
 from dissononce.processing.modifiers.fallback import FallbackPatternModifier
-from dissononce.processing.symmetricstate import SymmetricState
-from dissononce.processing.cipherstate import CipherState
+from dissononce.processing.impl.symmetricstate import SymmetricState
+from dissononce.processing.impl.cipherstate import CipherState
 from dissononce.cipher.aesgcm import AESGCMCipher
 from dissononce.hash.sha256 import SHA256Hash
 from dissononce.dh.keypair import KeyPair
-from dissononce.dh.key_public import PublicKey
-from dissononce.dh.x25519DH import X25519DH
+from dissononce.dh.x25519.public import PublicKey
+from dissononce.dh.private import PrivateKey
+from dissononce.dh.x25519.x25519 import X25519DH
 from dissononce.util.byte import ByteUtil
 
-from noisewa.models.payload.payload import Payload
 from noisewa.proto import wa20_pb2
-from noisewa.datastreams.segmenteddatastream import SegmentedDataStream
+from noisewa.streams.segmented.segmented import SegmentedStream
 from noisewa.certman.certman import CertMan
+from noisewa.config.client import ClientConfig
 
 import logging
 logger = logging.getLogger(__file__)
