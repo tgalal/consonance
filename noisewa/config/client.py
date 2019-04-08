@@ -1,7 +1,7 @@
-from noisewa.models.payload.useragent import UserAgent
+from noisewa.config.useragent import UserAgentConfig
 
 
-class Payload(object):
+class ClientConfig(object):
     def __init__(self,
                  username,
                  passive,
@@ -15,7 +15,7 @@ class Payload(object):
         :param passive:
         :type passive: bool
         :param useragent:
-        :type useragent: UserAgent
+        :type useragent: UserAgentConfig
         :param pushname:
         :type pushname: str
         :param short_connect:

@@ -1,4 +1,4 @@
-class AppVersion(object):
+class AppVersionConfig(object):
     def __init__(self, version):
         """
         :param version:

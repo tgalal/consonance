@@ -1,7 +1,7 @@
-from noisewa.models.payload.app_version import AppVersion
+from noisewa.config.appversion import AppVersionConfig
 
 
-class UserAgent(object):
+class UserAgentConfig(object):
     def __init__(self,
                  platform,
                  app_version,
@@ -15,7 +15,7 @@ class UserAgent(object):
         :param platform:
         :type platform: int
         :param app_version:
-        :type app_version: AppVersion
+        :type app_version: AppVersionConfig
         :param mcc:
         :type mcc: str
         :param mnc:
