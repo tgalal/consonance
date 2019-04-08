@@ -3,7 +3,7 @@ import logging
 logger = logging.getLogger(__file__)
 
 
-class DataStream(object):
+class ArbitraryStream(object):
     def read(self, readsize):
         """
         :param readsize:

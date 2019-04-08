@@ -1,9 +1,9 @@
 from socket import socket
 
-from noisewa.datastreams.datastream import DataStream
+from noisewa.streams.arbitrary.arbitrary import ArbitraryStream
 
 
-class SocketDataStream(DataStream):
+class SocketDynamicStream(ArbitraryStream):
     def __init__(self, socket):
         """
         :param socket:
