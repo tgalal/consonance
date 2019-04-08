@@ -20,123 +20,111 @@ from dissononce.util.byte import ByteUtil
 from noisewa.proto import wa20_pb2
 from noisewa.streams.segmented.segmented import SegmentedStream
 from noisewa.certman.certman import CertMan
+from noisewa.exceptions.new_rs_exception import NewRemoteStaticException
 from noisewa.config.client import ClientConfig
 
 import logging
+
 logger = logging.getLogger(__file__)
 
 
-
 class WAHandshake(object):
+    def __init__(self, version_major, version_minor):
+        self._handshakestate = SwitchableHandshakeState(
+            GuardedHandshakeState(
+                HandshakeState(
+                    SymmetricState(
+                        CipherState(
+                            AESGCMCipher()
+                        ),
+                        SHA256Hash()
+                    ),
+                    X25519DH()
+                )
+            )
+        ) # type: SwitchableHandshakeState
+        self._prologue = b"WA" + bytes([version_major, version_minor])
 
-    PROLOGUE = {
-        "2.0": b"WA\x02\x00",
-        "2.1": b"WA\x02\x01"
-    }
-
-    STATE_INIT = 0
-    STATE_WORKING = 1
-    STATE_FAILED = 3
-    STATE_SUCCEEDED = 4
-
-    def __init__(self, version, payload):
+    def perform(self, client_config, stream, s, rs=None):
         """
-        :param payload:
-        :type payload: Payload
-        """
-        self._payload = payload
-        self._handshakestate = HandshakeState(
-            SymmetricState(
-                CipherState(
-                    AESGCMCipher()
-                ),
-                SHA256Hash()
-            ),
-            X25519DH() # type: HandshakeState
-        )
-        self._state = self.STATE_INIT # type: int
-        self._cipherstatepair = None # type: tuple[CipherState,CipherState]
-        assert version in self.PROLOGUE, "%s is not supported " % version
-        self._prologue = self.PROLOGUE[version]
-
-    @property
-    def state(self):
-        return self._state
-
-    @property
-    def cipherstatepair(self):
-        return self._cipherstatepair
-
-    @property
-    def rs(self):
-        return self._handshakestate.rs
-
-    def _create_full_payload(self, payload):
-        """
-        :param payload:
-        :type payload: Payload
-        :return:
-        :rtype: wa20_pb2.ClientPayload
-        """
-        client_payload = wa20_pb2.ClientPayload()
-        user_agent = wa20_pb2.ClientPayload.UserAgent()
-        user_agent_app_version = wa20_pb2.ClientPayload.UserAgent.AppVersion()
-
-        user_agent.platform = payload.useragent.platform
-        user_agent.mcc = payload.useragent.mcc
-        user_agent.mnc = payload.useragent.mnc
-        user_agent.os_version = payload.useragent.os_version
-        user_agent.manufacturer = payload.useragent.manufacturer
-        user_agent.device = payload.useragent.device
-        user_agent.os_build_number = payload.useragent.os_build_number
-        user_agent.phone_id = payload.useragent.phone_id
-        user_agent.locale_language_iso_639_1 = payload.useragent.locale_lang
-        user_agent.locale_country_iso_3166_1_alpha_2 = payload.useragent.locale_country
-
-        user_agent_app_version.primary = payload.useragent.app_version.primary
-        user_agent_app_version.secondary = payload.useragent.app_version.secondary
-        user_agent_app_version.tertiary = payload.useragent.app_version.tertiary
-
-        user_agent.app_version.MergeFrom(user_agent_app_version)
-
-        client_payload.username = payload.username
-        client_payload.passive = payload.passive
-        client_payload.push_name = payload.pushname
-
-        max_int = (2**32) / 2
-
-        client_payload.session_id = random.randint(-max_int, max_int-1)
-        client_payload.short_connect = payload.short_connect
-        client_payload.connect_type = 1
-        client_payload.user_agent.MergeFrom(user_agent)
-
-        return client_payload
-
-    def perform(self, datatsream, s, rs=None):
-        """
-        :param datatsream:
-        :type SegmentedDataStream
+        :param client_config:
+        :type client_config:
+        :param stream:
+        :type stream:
         :param s:
-        :type s: KeyPair
+        :type s: noisewa.structs.keypair.KeyPair
         :param rs:
-        :type rs: PublicKey | None
+        :type rs: noisewa.structs.publickey.PublicKey | None
         :return:
         :rtype:
         """
-        self._state = self.STATE_WORKING
+        dissononce_s = KeyPair(
+            PublicKey(s.public.data),
+            PrivateKey(s.private.data)
+        )
+        dissononce_rs = PublicKey(rs.data) if rs else None
+        client_payload = self._create_full_payload(client_config)
         if rs is not None:
-            self._cipherstatepair = self._perform_ik(datatsream, s, rs)
+            try:
+                cipherstatepair = self._start_handshake_ik(stream, client_payload, dissononce_s, dissononce_rs)
+            except NewRemoteStaticException as ex:
+               cipherstatepair = self._switch_handshake_xxfallback(stream, dissononce_s, client_payload, ex.server_hello)
+        else:
+            cipherstatepair = self._start_handshake_ik(stream, client_payload, dissononce_s, dissononce_rs)
 
-        self._state = self.STATE_FAILED if self._cipherstatepair is None else self.STATE_SUCCEEDED
+        return cipherstatepair
 
-        return self._cipherstatepair
+    def _start_handshake_ik(self, stream, client_payload, s, rs):
+        """
+        :param stream:
+        :type stream: SegmentedStream
+        :param s:
+        :type s: KeyPair
+        :param rs:
+        :type rs: PublicKey
+        :return:
+        :rtype:
+        """
+        self._handshakestate.initialize(
+            handshake_pattern=IKHandshakePattern(),
+            initiator=True,
+            prologue=self._prologue,
+            s=s,
+            rs=rs
+        )
+        message_buffer = bytearray()
+        self._handshakestate.write_message(client_payload.SerializeToString(), message_buffer)
+        ephemeral_public, static_public, payload = ByteUtil.split(bytes(message_buffer), 32, 48, len(message_buffer) - 32 + 48)
+        handshakemessage = wa20_pb2.HandshakeMessage()
+        client_hello = wa20_pb2.HandshakeMessage.ClientHello()
 
-    def _perform_fallback(self, handshake_pattern, datastream, s, client_payload, server_hello):
+        client_hello.ephemeral = ephemeral_public
+        client_hello.static = static_public
+        client_hello.payload = payload
+        handshakemessage.client_hello.MergeFrom(client_hello)
+
+        stream.write_segment(handshakemessage.SerializeToString())
+
+        incoming_handshakemessage = wa20_pb2.HandshakeMessage()
+        incoming_handshakemessage.ParseFromString(stream.read_segment())
+
+        if not incoming_handshakemessage.HasField("server_hello"):
+            raise ValueError("Handshake message does not contain server hello!")
+
+        server_hello = incoming_handshakemessage.server_hello
+
+        if server_hello.HasField("static"):
+            raise NewRemoteStaticException(server_hello)
+
+        payload_buffer = bytearray()
+        return self._handshakestate.read_message(server_hello.ephemeral + server_hello.static + server_hello.payload, payload_buffer)
+
+    def _switch_handshake_xxfallback(self, stream, s, client_payload, server_hello):
         """
         :param handshake_pattern:
         :type handshake_pattern: HandshakePattern
-        :param datastream:
-        :type datastream: SegmentedDataStream
+        :param stream:
+        :type stream: SegmentedStream
         :param s:
         :type s: KeyPair
         :param e:
@@ -148,8 +136,8 @@ class WAHandshake(object):
         :return:
         :rtype: tuple(CipherState,CipherState)
         """
-        self._handshakestate.modify(
-                handshake_pattern=FallbackPatternModifier().modify(handshake_pattern),
+        self._handshakestate.switch(
+                handshake_pattern=FallbackPatternModifier().modify(XXHandshakePattern()),
                 initiator=True,
                 prologue=self._prologue,
                 s=s
@@ -172,51 +160,47 @@ class WAHandshake(object):
         client_finish.payload = payload
         outgoing_handshakemessage = wa20_pb2.HandshakeMessage()
         outgoing_handshakemessage.client_finish.MergeFrom(client_finish)
-        datastream.write(outgoing_handshakemessage.SerializeToString())
+        stream.write_segment(outgoing_handshakemessage.SerializeToString())
 
         return cipherpair
 
-    def _perform_ik(self, datastream, s, rs):
+    def _create_full_payload(self, client_config):
         """
-        :param datastream:
-        :type datastream: SegmentedDataStream
-        :param s:
-        :type s: KeyPair
-        :param rs:
-        :type rs: PublicKey
+        :param client_config:
+        :type client_config: ClientConfig
         :return:
-        :rtype:
+        :rtype: wa20_pb2.ClientPayload
         """
-        self._handshakestate.initialize(
-            handshake_pattern=IKHandshakePattern(),
-            initiator=True,
-            prologue=self._prologue,
-            s=s,
-            rs=rs
-        )
-        client_payload = self._create_full_payload(self._payload)
-        message_buffer = bytearray()
-        self._handshakestate.write_message(client_payload.SerializeToString(), message_buffer)
-        ephemeral_public, static_public, payload = ByteUtil.split(bytes(message_buffer), 32, 48, len(message_buffer) - 32 + 48)
-        handshakemessage = wa20_pb2.HandshakeMessage()
-        client_hello = wa20_pb2.HandshakeMessage.ClientHello()
+        client_payload = wa20_pb2.ClientPayload()
+        user_agent = wa20_pb2.ClientPayload.UserAgent()
+        user_agent_app_version = wa20_pb2.ClientPayload.UserAgent.AppVersion()
 
-        client_hello.ephemeral = ephemeral_public
-        client_hello.static = static_public
-        client_hello.payload = payload
-        handshakemessage.client_hello.MergeFrom(client_hello)
+        user_agent.platform = client_config.useragent.platform
+        user_agent.mcc = client_config.useragent.mcc
+        user_agent.mnc = client_config.useragent.mnc
+        user_agent.os_version = client_config.useragent.os_version
+        user_agent.manufacturer = client_config.useragent.manufacturer
+        user_agent.device = client_config.useragent.device
+        user_agent.os_build_number = client_config.useragent.os_build_number
+        user_agent.phone_id = client_config.useragent.phone_id
+        user_agent.locale_language_iso_639_1 = client_config.useragent.locale_lang
+        user_agent.locale_country_iso_3166_1_alpha_2 = client_config.useragent.locale_country
 
-        datastream.write(handshakemessage.SerializeToString())
+        user_agent_app_version.primary = client_config.useragent.app_version.primary
+        user_agent_app_version.secondary = client_config.useragent.app_version.secondary
+        user_agent_app_version.tertiary = client_config.useragent.app_version.tertiary
 
-        incoming_handshakemessage = wa20_pb2.HandshakeMessage()
-        incoming_handshakemessage.ParseFromString(datastream.read())
-        if not incoming_handshakemessage.HasField("server_hello"):
-            raise ValueError("Handshake message does not contain server hello!")
-        server_hello = incoming_handshakemessage.server_hello
+        user_agent.app_version.MergeFrom(user_agent_app_version)
 
+        client_payload.username = client_config.username
+        client_payload.passive = client_config.passive
+        client_payload.push_name = client_config.pushname
 
-        if not server_hello.HasField("static"):
-            payload_buffer = bytearray()
-            return self._handshakestate.read_message(server_hello.ephemeral + server_hello.static + server_hello.payload, payload_buffer)
-        else:
-            return self._perform_fallback(XXHandshakePattern(), datastream, s, client_payload, server_hello)
+        max_int = (2**32) / 2
+
+        client_payload.session_id = random.randint(-max_int, max_int-1)
+        client_payload.short_connect = client_config.short_connect
+        client_payload.connect_type = 1
+        client_payload.user_agent.MergeFrom(user_agent)
+
+        return client_payload
