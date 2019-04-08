@@ -2,6 +2,7 @@ import logging
 
 logger = logging.getLogger(__file__)
 
+
 class DataStream(object):
     def read(self, readsize):
         """
@@ -18,4 +19,3 @@ class DataStream(object):
         :return:
         :rtype:
         """
-        logger.debug("write: %s" % [d for d in data])
