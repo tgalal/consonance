@@ -1,8 +1,8 @@
 import random
 
 from dissononce.processing.impl.handshakestate import HandshakeState
-from dissononce.processing.extensions.handshakestate_guarded import GuardedHandshakeState
-from dissononce.processing.extensions.handshakestate_switchable import SwitchableHandshakeState
+from dissononce.extras.processing.handshakestate_guarded import GuardedHandshakeState
+from dissononce.extras.processing.handshakestate_switchable import SwitchableHandshakeState
 from dissononce.processing.handshakepatterns.handshakepattern import HandshakePattern
 from dissononce.processing.handshakepatterns.interactive.IK import IKHandshakePattern
 from dissononce.processing.handshakepatterns.interactive.XX import XXHandshakePattern
@@ -15,7 +15,6 @@ from dissononce.dh.keypair import KeyPair
 from dissononce.dh.x25519.public import PublicKey
 from dissononce.dh.private import PrivateKey
 from dissononce.dh.x25519.x25519 import X25519DH
-from dissononce.util.byte import ByteUtil
 
 from noisewa.proto import wa20_pb2
 from noisewa.streams.segmented.segmented import SegmentedStream
@@ -23,6 +22,7 @@ from noisewa.certman.certman import CertMan
 from noisewa.exceptions.new_rs_exception import NewRemoteStaticException
 from noisewa.config.client import ClientConfig
 from noisewa.structs.publickey import PublicKey
+from noisewa.util.byte import ByteUtil
 
 import logging
 
