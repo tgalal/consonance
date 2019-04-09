@@ -9,3 +9,6 @@ class PublicKey(object):
     @property
     def data(self):
         return self._data
+
+    def __eq__(self, other):
+        return type(other) is PublicKey and self.data == other.data

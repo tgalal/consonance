@@ -9,3 +9,6 @@ class PrivateKey(object):
     @property
     def data(self):
         return self._data
+
+    def __eq__(self, other):
+        return type(other) is PrivateKey and self.data == other.data

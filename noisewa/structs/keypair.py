@@ -24,6 +24,9 @@ class KeyPair(object):
     def private(self):
         return self._private
 
+    def __eq__(self, other):
+        return type(other) is KeyPair and other.public == self.public and other.private == self.private
+
     @classmethod
     def generate(cls):
         """
