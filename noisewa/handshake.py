@@ -22,6 +22,7 @@ from noisewa.streams.segmented.segmented import SegmentedStream
 from noisewa.certman.certman import CertMan
 from noisewa.exceptions.new_rs_exception import NewRemoteStaticException
 from noisewa.config.client import ClientConfig
+from noisewa.structs.publickey import PublicKey
 
 import logging
 
@@ -73,6 +74,10 @@ class WAHandshake(object):
             cipherstatepair = self._start_handshake_ik(stream, client_payload, dissononce_s, dissononce_rs)
 
         return cipherstatepair
+
+    @property
+    def rs(self):
+        return PublicKey(self._handshakestate.rs.data) if self._handshakestate.rs else None
 
     def _start_handshake_ik(self, stream, client_payload, s, rs):
         """

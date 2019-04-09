@@ -2,7 +2,6 @@ from noisewa.config.client import ClientConfig
 from noisewa.handshake import WAHandshake
 from noisewa.streams.segmented.segmented import SegmentedStream
 from noisewa.transport import WANoiseTransport
-
 from transitions import Machine
 
 
@@ -43,6 +42,7 @@ class WANoiseProtocol(object):
         self._version_major = version_major
         self._version_minor = version_minor
         self._protocol_state_callbacks = protocol_state_callbacks
+        self._rs = None
         self._machine = Machine(
             states=self.STATES, transitions=self.TRANSITIONS, initial='init',
             after_state_change=self._trigger_state_callback
@@ -59,6 +59,10 @@ class WANoiseProtocol(object):
     @property
     def state(self):
         return self._machine.state
+
+    @property
+    def rs(self):
+        return self._rs
 
     def start(self, stream, client_config, s, rs=None):
         """
@@ -77,7 +81,9 @@ class WANoiseProtocol(object):
         handshake = WAHandshake(self._version_major, self._version_minor)
         result = handshake.perform(client_config, stream, s, rs)
 
+
         if result is not None:
+            self._rs = handshake.rs
             self._transport = WANoiseTransport(stream, result[0], result[1])
             self._machine.finish()
         else:
