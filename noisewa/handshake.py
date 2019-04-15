@@ -7,7 +7,6 @@ from dissononce.processing.handshakepatterns.handshakepattern import HandshakePa
 from dissononce.processing.handshakepatterns.interactive.IK import IKHandshakePattern
 from dissononce.processing.handshakepatterns.interactive.XX import XXHandshakePattern
 from dissononce.processing.modifiers.fallback import FallbackPatternModifier
-from dissononce.processing.impl.symmetricstate import SymmetricState
 from dissononce.processing.impl.cipherstate import CipherState
 from dissononce.cipher.aesgcm import AESGCMCipher
 from dissononce.hash.sha256 import SHA256Hash
@@ -16,6 +15,7 @@ from dissononce.dh.x25519.public import PublicKey
 from dissononce.dh.private import PrivateKey
 from dissononce.dh.x25519.x25519 import X25519DH
 
+from noisewa.dissononce.processing.symmetricstate_wa import WASymmetricState
 from noisewa.proto import wa20_pb2
 from noisewa.streams.segmented.segmented import SegmentedStream
 from noisewa.certman.certman import CertMan
@@ -26,7 +26,7 @@ from noisewa.util.byte import ByteUtil
 
 import logging
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class WAHandshake(object):
@@ -34,7 +34,7 @@ class WAHandshake(object):
         self._handshakestate = SwitchableHandshakeState(
             GuardedHandshakeState(
                 HandshakeState(
-                    SymmetricState(
+                    WASymmetricState(
                         CipherState(
                             AESGCMCipher()
                         ),
@@ -71,13 +71,72 @@ class WAHandshake(object):
             except NewRemoteStaticException as ex:
                cipherstatepair = self._switch_handshake_xxfallback(stream, dissononce_s, client_payload, ex.server_hello)
         else:
-            cipherstatepair = self._start_handshake_ik(stream, client_payload, dissononce_s, dissononce_rs)
+            cipherstatepair = self._start_handshake_xx(stream, client_payload, dissononce_s)
 
         return cipherstatepair
 
     @property
     def rs(self):
         return PublicKey(self._handshakestate.rs.data) if self._handshakestate.rs else None
+
+    def _start_handshake_xx(self, stream, client_payload, s):
+        """
+        :param stream:
+        :type stream: SegmentedStream
+        :param client_payload:
+        :type client_payload:
+        :param s:
+        :type s: KeyPair
+        :return:
+        :rtype:
+        """
+        self._handshakestate.initialize(
+            handshake_pattern=XXHandshakePattern(),
+            initiator=True,
+            prologue=self._prologue,
+            s=s
+        )
+        ephemeral_public = bytearray()
+        self._handshakestate.write_message(b'', ephemeral_public)
+        handshakemessage = wa20_pb2.HandshakeMessage()
+        client_hello = wa20_pb2.HandshakeMessage.ClientHello()
+
+        client_hello.ephemeral = bytes(ephemeral_public)
+        handshakemessage.client_hello.MergeFrom(client_hello)
+        stream.write_segment(handshakemessage.SerializeToString())
+
+        incoming_handshakemessage = wa20_pb2.HandshakeMessage()
+        incoming_handshakemessage.ParseFromString(stream.read_segment())
+
+        if not incoming_handshakemessage.HasField("server_hello"):
+            raise ValueError("Handshake message does not contain server hello!")
+
+        server_hello = incoming_handshakemessage.server_hello
+
+        payload_buffer = bytearray()
+        self._handshakestate.read_message(
+            server_hello.ephemeral + server_hello.static + server_hello.payload, payload_buffer
+        )
+        certman = CertMan()
+
+        if certman.is_valid(self._handshakestate.rs, bytes(payload_buffer)):
+            logger.debug("cert is valid")
+        else:
+            logger.error("cert is not valid")
+
+        message_buffer = bytearray()
+
+        cipherpair = self._handshakestate.write_message(client_payload.SerializeToString(), message_buffer)
+
+        static, payload = ByteUtil.split(bytes(message_buffer), 48, len(message_buffer) - 48)
+        client_finish = wa20_pb2.HandshakeMessage.ClientFinish()
+        client_finish.static = static
+        client_finish.payload = payload
+        outgoing_handshakemessage = wa20_pb2.HandshakeMessage()
+        outgoing_handshakemessage.client_finish.MergeFrom(client_finish)
+        stream.write_segment(outgoing_handshakemessage.SerializeToString())
+
+        return cipherpair
 
     def _start_handshake_ik(self, stream, client_payload, s, rs):
         """
@@ -122,7 +181,9 @@ class WAHandshake(object):
             raise NewRemoteStaticException(server_hello)
 
         payload_buffer = bytearray()
-        return self._handshakestate.read_message(server_hello.ephemeral + server_hello.static + server_hello.payload, payload_buffer)
+        return self._handshakestate.read_message(
+            server_hello.ephemeral + server_hello.static + server_hello.payload, payload_buffer
+        )
 
     def _switch_handshake_xxfallback(self, stream, s, client_payload, server_hello):
         """
