@@ -1,13 +1,18 @@
 from dissononce.dh.x25519.x25519 import PublicKey
 from noisewa.proto import wa20_pb2
+from xeddsa.implementations.xeddsa25519 import XEdDSA25519
 import logging
-logger = logging.getLogger(__file__)
+import time
+
+logger = logging.getLogger(__name__)
 
 
 class CertMan(object):
     def __init__(self):
-        self._certificates = {
-            "WhatsAppLongTerm1": ""
+        self._pubkeys = {
+            "WhatsAppLongTerm1": bytearray(
+                [20, 35, 117, 87, 77, 10, 88, 113, 102, 170, 231, 30, 190, 81, 100, 55, 196, 162, 139,
+                 115, 227, 105, 92, 108, 225, 247, 249, 84, 93, 168, 238, 107])
         }
 
     def is_valid(self, rs, certificate_data):
@@ -24,11 +29,29 @@ class CertMan(object):
         cert_details = wa20_pb2.NoiseCertificate.Details()
         cert_details.ParseFromString(cert.details)
 
-        logger.debug("signature=[%d bytes]" % (len(cert.signature)))
-        logger.debug("serial=%d" % cert_details.serial)
-        logger.debug("issuer=%s" % cert_details.issuer)
-        logger.debug("expires=%d" % cert_details.expires)
-        logger.debug("subject=%s" % cert_details.subject)
-        logger.debug("key=[%d bytes]" % len(cert_details.key))
+        logger.debug(
+            "NoiseCertificate(signature=[%d bytes], serial=%d, issuer='%s', expires=%d, subject='%s', ""key=[%d bytes])"
+            % (
+                len(cert.signature), cert_details.serial, cert_details.issuer, cert_details.expires,
+                cert_details.subject, len(cert_details.key)
+            )
+        )
+
+        if cert_details.issuer not in self._pubkeys:
+            logger.error("noise certificate issued by unknown source: issuer=%s" % cert_details.issuer)
+            return False
+
+        xeddsa = XEdDSA25519(mont_pub=bytes(self._pubkeys[cert_details.issuer]))
+        if not xeddsa.verify(cert.details, cert.signature):
+            logger.error("invalid signature on noise ceritificate; issuer=%s" % cert_details.issuer)
+            return False
+
+        if cert_details.key != rs.data:
+            logger.error("noise certificate key does not match proposed server static key; issuer=%s" % cert_details.issuer)
+            return False
+
+        if cert_details.HasField("expires") and cert_details.expires < int(time.time()):
+            logger.error("noise certificate expired; issuer=%s" % cert_details.issuer)
+            return False
 
         return True
