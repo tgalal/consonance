@@ -15,14 +15,14 @@ from dissononce.dh.x25519.public import PublicKey
 from dissononce.dh.private import PrivateKey
 from dissononce.dh.x25519.x25519 import X25519DH
 
-from noisewa.dissononce.processing.symmetricstate_wa import WASymmetricState
-from noisewa.proto import wa20_pb2
-from noisewa.streams.segmented.segmented import SegmentedStream
-from noisewa.certman.certman import CertMan
-from noisewa.exceptions.new_rs_exception import NewRemoteStaticException
-from noisewa.config.client import ClientConfig
-from noisewa.structs.publickey import PublicKey
-from noisewa.util.byte import ByteUtil
+from .dissononce.processing.symmetricstate_wa import WASymmetricState
+from .proto import wa20_pb2
+from .streams.segmented.segmented import SegmentedStream
+from .certman.certman import CertMan
+from .exceptions.new_rs_exception import NewRemoteStaticException
+from .config.client import ClientConfig
+from .structs.publickey import PublicKey
+from .util.byte import ByteUtil
 
 import logging
 
@@ -53,9 +53,9 @@ class WAHandshake(object):
         :param stream:
         :type stream:
         :param s:
-        :type s: noisewa.structs.keypair.KeyPair
+        :type s: consononce.structs.keypair.KeyPair
         :param rs:
-        :type rs: noisewa.structs.publickey.PublicKey | None
+        :type rs: consononce.structs.publickey.PublicKey | None
         :return:
         :rtype:
         """

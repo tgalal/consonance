@@ -1,7 +1,7 @@
-from noisewa.config.client import ClientConfig
-from noisewa.handshake import WAHandshake
-from noisewa.streams.segmented.segmented import SegmentedStream
-from noisewa.transport import WANoiseTransport
+from .config.client import ClientConfig
+from .handshake import WAHandshake
+from .streams.segmented.segmented import SegmentedStream
+from .transport import WANoiseTransport
 from transitions import Machine
 
 
@@ -73,9 +73,9 @@ class WANoiseProtocol(object):
         :return:
         :rtype:
         :param s:
-        :type s: noisewa.structs.keypair.KeyPair
+        :type s: consononce.structs.keypair.KeyPair
         :param rs:
-        :type rs: noisewa.structs.publickey.PublicKey
+        :type rs: consononce.structs.publickey.PublicKey
         """
         self._machine.start()
         handshake = WAHandshake(self._version_major, self._version_minor)

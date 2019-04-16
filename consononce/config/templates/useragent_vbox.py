@@ -1,5 +1,5 @@
-from noisewa.config.useragent import UserAgentConfig
-from noisewa.config.appversion import AppVersionConfig
+from ..useragent import UserAgentConfig
+from ..appversion import AppVersionConfig
 
 
 class VBoxUserAgentConfig(UserAgentConfig):

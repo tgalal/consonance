@@ -1,4 +1,4 @@
-from noisewa.config.appversion import AppVersionConfig
+from .appversion import AppVersionConfig
 
 
 class UserAgentConfig(object):

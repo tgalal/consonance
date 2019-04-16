@@ -1,4 +1,4 @@
-from noisewa.streams.segmented.segmented import SegmentedStream
+from .segmented import SegmentedStream
 
 try:
     import Queue

@@ -1,7 +1,7 @@
 import struct
 
-from noisewa.streams.segmented.segmented import SegmentedStream
-from noisewa.streams.arbitrary.arbitrary import ArbitraryStream
+from .segmented import SegmentedStream
+from ..arbitrary.arbitrary import ArbitraryStream
 
 
 class WASegmentedStream(SegmentedStream):

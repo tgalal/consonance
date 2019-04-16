@@ -1,5 +1,5 @@
-from noisewa.structs.publickey import PublicKey
-from noisewa.structs.privatekey import PrivateKey
+from .publickey import PublicKey
+from .privatekey import PrivateKey
 
 from dissononce.dh.x25519.x25519 import X25519DH
 from dissononce.dh.x25519.keypair import KeyPair as X25519KeyPair
@@ -9,12 +9,12 @@ class KeyPair(object):
     def __init__(self, public, private):
         """
         :param public:
-        :type public: noisewa.structs.publickey.PublicKey
+        :type public: PublicKey
         :param private:
-        :type private: noisewa.structs.privatekey.PrivateKey
+        :type private: PrivateKey
         """
-        self._public = public  # type: noisewa.structs.publickey.PublicKey
-        self._private = private  # type: noisewa.structs.privatekey.PrivateKey
+        self._public = public  # type: PublicKey
+        self._private = private  # type: PrivateKey
         
     @property
     def public(self):

@@ -1,5 +1,5 @@
 from dissononce.dh.x25519.x25519 import PublicKey
-from noisewa.proto import wa20_pb2
+from ..proto import wa20_pb2
 from xeddsa.implementations.xeddsa25519 import XEdDSA25519
 import logging
 import time

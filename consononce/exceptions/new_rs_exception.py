@@ -1,4 +1,6 @@
-from noisewa.proto.wa20_pb2 import HandshakeMessage
+from ..proto.wa20_pb2 import HandshakeMessage
+
+
 class NewRemoteStaticException(Exception):
     def __init__(self, server_hello):
         """

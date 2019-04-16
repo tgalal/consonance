@@ -1,6 +1,6 @@
 from socket import socket
 
-from noisewa.streams.arbitrary.arbitrary import ArbitraryStream
+from .arbitrary import ArbitraryStream
 
 
 class SocketArbitraryStream(ArbitraryStream):

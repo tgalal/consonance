@@ -1,4 +1,4 @@
-from noisewa.config.useragent import UserAgentConfig
+from .useragent import UserAgentConfig
 
 
 class ClientConfig(object):

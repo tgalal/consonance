@@ -1,5 +1,5 @@
 from dissononce.processing.cipherstate import CipherState
-from noisewa.streams.segmented.segmented import SegmentedStream
+from .streams.segmented.segmented import SegmentedStream
 
 
 class WANoiseTransport(object):
