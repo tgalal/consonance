@@ -81,15 +81,15 @@ class WANoiseProtocol(object):
         handshake = WAHandshake(self._version_major, self._version_minor)
         result = handshake.perform(client_config, stream, s, rs)
 
-
         if result is not None:
             self._rs = handshake.rs
             self._transport = WANoiseTransport(stream, result[0], result[1])
             self._machine.finish()
+            return True
         else:
             self._machine.fail()
 
-        return result is True
+        return False
 
     def reset(self):
         self._machine.reset()
