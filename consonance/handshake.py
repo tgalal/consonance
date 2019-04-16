@@ -53,9 +53,9 @@ class WAHandshake(object):
         :param stream:
         :type stream:
         :param s:
-        :type s: consononce.structs.keypair.KeyPair
+        :type s: consonance.structs.keypair.KeyPair
         :param rs:
-        :type rs: consononce.structs.publickey.PublicKey | None
+        :type rs: consonance.structs.publickey.PublicKey | None
         :return:
         :rtype:
         """

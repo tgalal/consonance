@@ -73,9 +73,9 @@ class WANoiseProtocol(object):
         :return:
         :rtype:
         :param s:
-        :type s: consononce.structs.keypair.KeyPair
+        :type s: consonance.structs.keypair.KeyPair
         :param rs:
-        :type rs: consononce.structs.publickey.PublicKey
+        :type rs: consonance.structs.publickey.PublicKey
         """
         self._machine.start()
         handshake = WAHandshake(self._version_major, self._version_minor)
