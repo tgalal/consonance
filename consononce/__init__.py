@@ -1,5 +1,8 @@
 import logging
 
+__version__ = "0.0.1"
+__author__ = "Tarek Galal"
+
 logger = logging.getLogger(__name__)
 
 # create console handler and set level to debug
