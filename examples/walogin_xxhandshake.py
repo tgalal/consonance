@@ -21,12 +21,16 @@ USERNAME = 123456789
 KEYPAIR = KeyPair.from_bytes(
     base64.b64decode(b"YJa8Vd9pG0KV2tDYi5V+DMOtSvCEFzRGCzOlGZkvBHzJvBE5C3oC2Fruniw0GBGo7HHgR4TjvjI3C9AihStsVg==")
 )
+# same phone_id/fdid used at registration.
+# on Android it's phoneid_id under /data/data/com.whatsapp/shared_prefs/com.whatsapp_preferences.xml
+PHONE_ID = uuid.uuid4().__str__()
+# create full configuration which will translate later into a protobuf payload
 CONFIG = ClientConfig(
     username=USERNAME,
     passive=True,
     useragent=VBoxUserAgentConfig(
         app_version="2.19.51",
-        phone_id=uuid.uuid4().__str__(),
+        phone_id=PHONE_ID,
         mcc="000",
         mnc="000",
     ),
