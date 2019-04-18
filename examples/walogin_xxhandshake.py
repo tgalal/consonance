@@ -63,7 +63,7 @@ if __name__ == "__main__":
             print("Authentication failed")
             sys.exit(1)
         else:
-            print("Unrecognized authentication response")
+            print("Unrecognized authentication response: %s" % (first_transport_data[3]))
             sys.exit(1)
     else:
         print("Handshake failed")
