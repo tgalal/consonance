@@ -33,4 +33,4 @@ class WANoiseTransport(object):
         """
         ciphertext = self._stream.read_segment()
         plaintext = self._recv_cipherstate.decrypt_with_ad(b'', ciphertext)
-        return plaintext
+        return bytearray(plaintext)

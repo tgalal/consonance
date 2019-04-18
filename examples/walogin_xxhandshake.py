@@ -2,7 +2,7 @@ from consonance.structs.keypair import KeyPair
 from consonance.protocol import WANoiseProtocol
 from consonance.config.client import ClientConfig
 from consonance.streams.segmented.wa import WASegmentedStream
-from consonance.streams.arbitrary.socket import SocketArbitraryStream
+from consonance.streams.arbitrary.arbitrary_socket import SocketArbitraryStream
 from consonance.config.templates.useragent_vbox import VBoxUserAgentConfig
 import consonance
 import uuid
@@ -52,16 +52,15 @@ if __name__ == "__main__":
     # start the protocol, this should a XX handshake since
     # we are not passing the remote static public key
     if wa_noiseprotocol.start(stream, CONFIG, KEYPAIR):
-        print("Handshake completed")
-        print("Authentication: ", end='')
+        print("Handshake completed, checking authentication...")
         # we are now in transport phase, first incoming data
         # will indicate whether we are authenticated
         first_transport_data = wa_noiseprotocol.receive()
         # fourth byte is status, 172 is success, 52 is failure
         if first_transport_data[3] == 172:
-            print("succeeded")
+            print("Authentication succeeded")
         elif first_transport_data[3] == 52:
-            print("failed")
+            print("Authentication failed")
             sys.exit(1)
         else:
             print("Unrecognized authentication response")

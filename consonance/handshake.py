@@ -15,7 +15,7 @@ from dissononce.dh.x25519.public import PublicKey
 from dissononce.dh.private import PrivateKey
 from dissononce.dh.x25519.x25519 import X25519DH
 
-from .dissononce.processing.symmetricstate_wa import WASymmetricState
+from .dissononce_extras.processing.symmetricstate_wa import WASymmetricState
 from .proto import wa20_pb2
 from .streams.segmented.segmented import SegmentedStream
 from .certman.certman import CertMan
@@ -44,7 +44,7 @@ class WAHandshake(object):
                 )
             )
         ) # type: SwitchableHandshakeState
-        self._prologue = b"WA" + bytes([version_major, version_minor])
+        self._prologue = b"WA" + bytearray([version_major, version_minor])
 
     def perform(self, client_config, stream, s, rs=None):
         """

@@ -1,6 +1,6 @@
 from dissononce.dh.x25519.x25519 import PublicKey
 from ..proto import wa20_pb2
-from xeddsa.implementations.xeddsa25519 import XEdDSA25519
+import axolotl_curve25519 as curve
 import logging
 import time
 
@@ -41,8 +41,7 @@ class CertMan(object):
             logger.error("noise certificate issued by unknown source: issuer=%s" % cert_details.issuer)
             return False
 
-        xeddsa = XEdDSA25519(mont_pub=bytes(self._pubkeys[cert_details.issuer]))
-        if not xeddsa.verify(cert.details, cert.signature):
+        if curve.verifySignature(bytes(self._pubkeys[cert_details.issuer]), cert.details, cert.signature) != 0:
             logger.error("invalid signature on noise ceritificate; issuer=%s" % cert_details.issuer)
             return False
 
