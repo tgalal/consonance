@@ -89,4 +89,3 @@ class UserAgentConfig(object):
     @property
     def locale_country(self):
         return self._locale_country
-

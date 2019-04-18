@@ -7,7 +7,7 @@ class ClientConfig(object):
                  passive,
                  useragent,
                  pushname,
-                 short_connect,
+                 short_connect=True,
                  ):
         """
         :param username:
