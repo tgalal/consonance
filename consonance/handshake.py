@@ -14,6 +14,7 @@ from dissononce.dh.keypair import KeyPair
 from dissononce.dh.x25519.public import PublicKey
 from dissononce.dh.private import PrivateKey
 from dissononce.dh.x25519.x25519 import X25519DH
+from dissononce.extras.dh.dangerous.dh_nogen import NoGenDH
 
 from .dissononce_extras.processing.symmetricstate_wa import WASymmetricState
 from .proto import wa20_pb2
@@ -31,22 +32,10 @@ logger = logging.getLogger(__name__)
 
 class WAHandshake(object):
     def __init__(self, version_major, version_minor):
-        self._handshakestate = SwitchableHandshakeState(
-            GuardedHandshakeState(
-                HandshakeState(
-                    WASymmetricState(
-                        CipherState(
-                            AESGCMCipher()
-                        ),
-                        SHA256Hash()
-                    ),
-                    X25519DH()
-                )
-            )
-        ) # type: SwitchableHandshakeState
         self._prologue = b"WA" + bytearray([version_major, version_minor])
+        self._handshakestate = None  # type: HandshakeState | None
 
-    def perform(self, client_config, stream, s, rs=None):
+    def perform(self, client_config, stream, s, rs=None, e=None):
         """
         :param client_config:
         :type client_config:
@@ -56,9 +45,26 @@ class WAHandshake(object):
         :type s: consonance.structs.keypair.KeyPair
         :param rs:
         :type rs: consonance.structs.publickey.PublicKey | None
+        :type e: consonance.structs.keypair.KeyPair | None
         :return:
         :rtype:
         """
+        dh = X25519DH()
+        if e is not None:
+            dh = NoGenDH(dh, PrivateKey(e.private.data))
+        self._handshakestate = SwitchableHandshakeState(
+            GuardedHandshakeState(
+                HandshakeState(
+                    WASymmetricState(
+                        CipherState(
+                            AESGCMCipher()
+                        ),
+                        SHA256Hash()
+                    ),
+                    dh
+                )
+            )
+        )  # type: SwitchableHandshakeState
         dissononce_s = KeyPair(
             PublicKey(s.public.data),
             PrivateKey(s.private.data)
@@ -125,7 +131,6 @@ class WAHandshake(object):
             logger.error("cert is not valid")
 
         message_buffer = bytearray()
-
         cipherpair = self._handshakestate.write_message(client_payload.SerializeToString(), message_buffer)
 
         static, payload = ByteUtil.split(bytes(message_buffer), 48, len(message_buffer) - 48)
