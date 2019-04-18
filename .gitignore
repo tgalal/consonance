@@ -3,7 +3,6 @@
 todo
 *.egg-info
 tp
-tests
 dist
 build
 .idea
