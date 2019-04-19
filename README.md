@@ -31,20 +31,20 @@ pip install dissononce
 ### Configuration
 
 Before performing a handshake, you have to define your configuration as a WhatsApp client. This can be done by passing
-the configuration parameters to an instance of ```ClientConfig```. Normally this configuration includes details about the 
-device WhatsApp is running on. Those device details are to be passed to ClientConfig's ```useragent``` parameters as 
+the configuration parameters to an instance of ```ClientConfig```. Normally this configuration includes details about
+the device WhatsApp is running on. Those device details are to be passed to ClientConfig's ```useragent``` parameters
 through an instance of ```consonance.config.useragent.UserAgentConfig```. In order to facilitate usage, 
 templates for ```UserAgentConfig``` with some pre-set parameters exist under ```consonance/config/templates```. 
 
 ```python
 from consonance.config.client import ClientConfig
-from consonance.config.templates.useragent_vbox import VBoxUserAgentConfig
+from consonance.config.templates.useragent_samsung_s9p import SamsungS9PUserAgentConfig
 import uuid
 
 client_config = ClientConfig(
     username=999999999,  # username/phone number
     passive=True,  # passive connection, you will not send any data after handshake, only receive
-    useragent=VBoxUserAgentConfig(
+    useragent=SamsungS9PUserAgentConfig(
         app_version="2.19.51",  # WhatsApp app version to pose as
         phone_id=str(uuid.uuid4())  # uuid that was used to register the aforementioned username
     ),
@@ -54,7 +54,7 @@ client_config = ClientConfig(
 
 In addition to ```ClientConfig``` one must possess a KeyPair that'll be used in the handshake process and for
 authenticating yourself to WhatsApp. This KeyPair was produced and used during registration and therefore the 
-same one has to be used at login for a successful authentication. For testing purposes you could always use a 
+same one has to be used here for a successful authentication. For testing purposes you could always generate a
 fresh KeyPair, in which case the handshake process goes through but authentication fails.
 
 ```python
@@ -62,7 +62,7 @@ from consonance.structs.keypair import KeyPair
 import base64
 
 keypair = KeyPair.generate()
-# or
+# or keypair used at registration, deserialized from concat. of private_bytes and public_bytes
 keypair = KeyPair.from_bytes(
     base64.b64decode(b"YJa8Vd9pG0KV2tDYi5V+DMOtSvCEFzRGCzOlGZkvBHzJvBE5C3oC2Fruniw0GBGo7HHgR4TjvjI3C9AihStsVg==")
 )
@@ -70,11 +70,17 @@ keypair = KeyPair.from_bytes(
 
 ### Connect and Authenticate
 
+With your ```ClientConfig``` and ```KeyPair``` you can now attempt a login to WhatsApp. The example below will
+demonstrate a [XX](https://noiseprotocol.org/noise.html#interactive-handshake-patterns-fundamental) handshake since
+we are not configuring WhatsApp's static public key:
+
 ```python
 from consonance.protocol import WANoiseProtocol
 from consonance.streams.segmented.wa import WASegmentedStream
 from consonance.streams.arbitrary.arbitrary_socket import SocketArbitraryStream
 import socket
+
+
 wa_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 wa_socket.connect(("e1.whatsapp.net", 443))
 # send WA header indicating protocol version
@@ -85,10 +91,12 @@ wa_socket_stream = WASegmentedStream(SocketArbitraryStream(wa_socket))
 wa_noiseprotocol = WANoiseProtocol(2, 1)
 # start the protocol, this should a XX handshake since
 # we are not passing the remote static public key
-if wa_noiseprotocol.start(wa_socket_stream, client_config, KEYPAIR):
+if wa_noiseprotocol.start(wa_socket_stream, client_config, keypair):
     print("Handshake completed, checking authentication...")
     # we are now in transport phase, first incoming data
     # will indicate whether we are authenticated
     first_transport_data = wa_noiseprotocol.receive()
+    assert first_transport_data == 172
 ```
 
+See [examples/walogin_xxhandshake.py](examples/walogin_xxhandshake.py) for the full example.
