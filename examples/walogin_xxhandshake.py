@@ -3,7 +3,7 @@ from consonance.protocol import WANoiseProtocol
 from consonance.config.client import ClientConfig
 from consonance.streams.segmented.wa import WASegmentedStream
 from consonance.streams.arbitrary.arbitrary_socket import SocketArbitraryStream
-from consonance.config.templates.useragent_vbox import VBoxUserAgentConfig
+from consonance.config.templates.useragent_samsung_s9p import SamsungS9PUserAgentConfig
 import consonance
 import uuid
 import dissononce
@@ -28,11 +28,9 @@ PHONE_ID = uuid.uuid4().__str__()
 CONFIG = ClientConfig(
     username=USERNAME,
     passive=True,
-    useragent=VBoxUserAgentConfig(
+    useragent=SamsungS9PUserAgentConfig(
         app_version="2.19.51",
-        phone_id=PHONE_ID,
-        mcc="000",
-        mnc="000",
+        phone_id=PHONE_ID
     ),
     pushname="consonance",
     short_connect=True
