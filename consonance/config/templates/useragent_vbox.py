@@ -3,7 +3,6 @@ from ..appversion import AppVersionConfig
 
 
 class VBoxUserAgentConfig(UserAgentConfig):
-
     DEFAULT_LOCALE_LANG = 'en'
     DEFAULT_LOCALE_COUNTRY = 'US'
     DEFAULT_MCC = '000'
@@ -12,7 +11,6 @@ class VBoxUserAgentConfig(UserAgentConfig):
     OS_BUILD_NUMBER = "vbox86p-userdebug 5.0 LRX21M 233 test-keys"
     MANUFACTURER = "unknown"
     DEVICE = "vbox86p"
-
 
     def __init__(self,
                  app_version,
