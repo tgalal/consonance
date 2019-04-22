@@ -15,7 +15,7 @@ class UserAgentConfig(object):
         :param platform:
         :type platform: int
         :param app_version:
-        :type app_version: AppVersionConfig
+        :type app_version: AppVersionConfig | str
         :param mcc:
         :type mcc: str
         :param mnc:
@@ -35,6 +35,8 @@ class UserAgentConfig(object):
         :param locale_country:
         :type locale_country: str
         """
+        if type(app_version) is str:
+            app_version = AppVersionConfig(app_version)
         self._platform = platform
         self._app_version = app_version
         self._mcc = mcc

@@ -18,13 +18,6 @@ class VBoxUserAgentConfig(UserAgentConfig):
                  mcc=None, mnc=None,
                  locale_lang=None,
                  locale_country=None):
-        """
-        :param app_version:
-        :type app_version: str | AppVersion
-        """
-        if type(app_version) is str:
-            app_version = AppVersionConfig(app_version)
-
         super(VBoxUserAgentConfig, self).__init__(
             platform=0,
             app_version=app_version,
