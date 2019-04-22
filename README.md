@@ -99,4 +99,10 @@ if wa_noiseprotocol.start(wa_socket_stream, client_config, keypair):
     assert first_transport_data == 172
 ```
 
-See [examples/walogin_xxhandshake.py](examples/walogin_xxhandshake.py) for the full example.
+- See [examples/walogin_handshake_xx.py](examples/walogin_handshake_xx.py) for the full ```XX``` handshake example.
+- See [examples/walogin_handshake_ik.py](examples/walogin_handshake_ik.py) for a ```IK``` handshake example.
+- See [examples/walogin_handshake_xxfallback.py](examples/walogin_handshake_xxfallback.py) for a ```XXfallback```
+ handshake example.
+- See [Interactive handshake patterns](https://noiseprotocol.org/noise.html#interactive-handshake-patterns-fundamental)
+and [Noise Pipes](https://noiseprotocol.org/noise.html#noise-pipes) from Noise for information about the handshake
+types used here.
