@@ -49,6 +49,9 @@ class WAHandshake(object):
         :return:
         :rtype:
         """
+        logger.debug("perform(client_config=%s, stream=%s, s=%s, rs=%s, e=%s)" % (
+            client_config, stream, s, rs, e
+        ))
         dh = X25519DH()
         if e is not None:
             dh = NoGenDH(dh, PrivateKey(e.private.data))
@@ -71,6 +74,7 @@ class WAHandshake(object):
         )
         dissononce_rs = PublicKey(rs.data) if rs else None
         client_payload = self._create_full_payload(client_config)
+        logger.debug("Create client_payload=%s" % client_payload)
         if rs is not None:
             try:
                 cipherstatepair = self._start_handshake_ik(stream, client_payload, dissononce_s, dissononce_rs)
