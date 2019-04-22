@@ -1,6 +1,6 @@
 import logging
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 __author__ = "Tarek Galal"
 
 logger = logging.getLogger(__name__)
