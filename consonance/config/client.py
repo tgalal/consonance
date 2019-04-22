@@ -2,6 +2,14 @@ from .useragent import UserAgentConfig
 
 
 class ClientConfig(object):
+    STR_TEMPLATE = """ClientConfig(
+    username={username},
+    passive={passive},
+    useragent={useragent},
+    pushname={pushname},
+    short_connect={short_connect}
+)"""
+
     def __init__(self,
                  username,
                  passive,
@@ -26,6 +34,15 @@ class ClientConfig(object):
         self._useragent = useragent
         self._pushname = pushname
         self._short_connect = short_connect
+
+    def __str__(self):
+        return self.STR_TEMPLATE.format(
+            username=self.username,
+            passive=self.passive,
+            useragent=self.useragent,
+            pushname=self.pushname,
+            short_connect=self.short_connect
+        )
 
     @property
     def username(self):

@@ -2,11 +2,24 @@ from .appversion import AppVersionConfig
 
 
 class UserAgentConfig(object):
-
     PLATFORM_ANDROID = 0
     PLATFORM_IOS = 1
     PLATFORM_WINDOWS_PHONE = 2
     PLATFORM_PYTHON_CLIENT = 7
+
+    STR_TEMPLATE = """UserAgentConfig(
+        platform={platform},
+        app_version={app_version},
+        mcc={mcc},
+        mnc={mnc},
+        os_version={os_version},
+        manufacturer={manufacturer},
+        device={device},
+        os_build_number={os_build_number},
+        phone_id={phone_id},
+        locale_lang={locale_lang},
+        locale_country={locale_country}
+    )"""
 
     def __init__(self,
                  platform,
@@ -54,6 +67,21 @@ class UserAgentConfig(object):
         self._phone_id = phone_id
         self._locale_lang = locale_lang
         self._locale_country = locale_country
+
+    def __str__(self):
+        return self.STR_TEMPLATE.format(
+            platform=self.platform,
+            app_version=self.app_version,
+            mcc=self.mcc,
+            mnc=self.mnc,
+            os_version=self.os_version,
+            manufacturer=self.manufacturer,
+            device=self.device,
+            os_build_number=self.os_build_number,
+            phone_id=self.phone_id,
+            locale_lang=self.locale_lang,
+            locale_country=self.locale_country
+        )
 
     @property
     def platform(self):
