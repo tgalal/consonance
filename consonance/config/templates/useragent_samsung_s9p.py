@@ -19,7 +19,7 @@ class SamsungS9PUserAgentConfig(UserAgentConfig):
                  locale_lang=None,
                  locale_country=None):
         super(SamsungS9PUserAgentConfig, self).__init__(
-            platform=0,
+            platform=UserAgentConfig.PLATFORM_ANDROID,
             app_version=app_version,
             mcc=mcc or self.DEFAULT_MCC, mnc=mnc or self.DEFAULT_MNC,
             os_version=self.OS_VERSION,

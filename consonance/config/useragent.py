@@ -2,6 +2,12 @@ from .appversion import AppVersionConfig
 
 
 class UserAgentConfig(object):
+
+    PLATFORM_ANDROID = 0
+    PLATFORM_IOS = 1
+    PLATFORM_WINDOWS_PHONE = 2
+    PLATFORM_PYTHON_CLIENT = 7
+
     def __init__(self,
                  platform,
                  app_version,
