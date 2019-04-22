@@ -55,7 +55,7 @@ client_config = ClientConfig(
 In addition to ```ClientConfig``` one must possess a KeyPair that'll be used in the handshake process and for
 authenticating yourself to WhatsApp. This KeyPair was produced and used during registration and therefore the 
 same one has to be used here for a successful authentication. For testing purposes you could always generate a
-fresh KeyPair, in which case the handshake process goes through but authentication fails.
+fresh KeyPair, in which case the handshake process would go through but authentication fails.
 
 ```python
 from consonance.structs.keypair import KeyPair
@@ -72,7 +72,7 @@ keypair = KeyPair.from_bytes(
 
 With your ```ClientConfig``` and ```KeyPair``` you can now attempt a login to WhatsApp. The example below will
 demonstrate a [XX](https://noiseprotocol.org/noise.html#interactive-handshake-patterns-fundamental) handshake since
-we are not configuring WhatsApp's static public key:
+we are not specifying WhatsApp's static public key:
 
 ```python
 from consonance.protocol import WANoiseProtocol
@@ -89,7 +89,7 @@ wa_socket.send(b"WA\x02\x01")
 wa_socket_stream = WASegmentedStream(SocketArbitraryStream(wa_socket))
 # initialize WANoiseProtocol 2.1
 wa_noiseprotocol = WANoiseProtocol(2, 1)
-# start the protocol, this should a XX handshake since
+# start the protocol, this should perform a XX handshake since
 # we are not passing the remote static public key
 if wa_noiseprotocol.start(wa_socket_stream, client_config, keypair):
     print("Handshake completed, checking authentication...")
