@@ -1,5 +1,4 @@
 from ..useragent import UserAgentConfig
-from ..appversion import AppVersionConfig
 
 
 class VBoxUserAgentConfig(UserAgentConfig):
