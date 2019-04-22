@@ -23,7 +23,7 @@ python setup.py install
 ```
 Using Pip:
 ```
-pip install dissononce
+pip install consonance
 ```
 
 ## Usage
