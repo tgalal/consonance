@@ -5,11 +5,11 @@ and SHA256 from Noise Protocol.
 
 ## META-INF
 ```
-consonance version: 0.1.0
+consonance version: 0.1.1
 released: 2019-04-22
 requires:
 - python>=2.5,<=3.7
-- dissononce >= 0.34.2
+- dissononce >= 0.34.3
 - transitions
 - protobuf
 - python-axolotl-curve25519
