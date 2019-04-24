@@ -6,7 +6,7 @@ setup(
     name='consonance',
     version=consonance.__version__,
     packages=find_packages(exclude=['tests', 'examples']),
-    install_requires=['dissononce>=0.34.2', 'python-axolotl-curve25519', 'transitions', 'protobuf'],
+    install_requires=['dissononce>=0.34.3', 'python-axolotl-curve25519', 'transitions', 'protobuf'],
     license='GPL-3+',
     author='Tarek Galal',
     author_email='tare2.galal@gmail.com',
