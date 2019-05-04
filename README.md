@@ -11,7 +11,7 @@ requires:
 - python>=2.5,<=3.7
 - dissononce >= 0.34.3
 - transitions
-- protobuf
+- protobuf >= 3.6.0
 - python-axolotl-curve25519
 ```
 
