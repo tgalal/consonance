@@ -2,6 +2,7 @@ from .config.client import ClientConfig
 from .handshake import WAHandshake
 from .streams.segmented.segmented import SegmentedStream
 from .transport import WANoiseTransport
+from .exceptions.handshake_failed_exception import HandshakeFailedException
 from transitions import Machine
 
 
@@ -79,17 +80,17 @@ class WANoiseProtocol(object):
         """
         self._machine.start()
         handshake = WAHandshake(self._version_major, self._version_minor)
-        result = handshake.perform(client_config, stream, s, rs)
-
-        if result is not None:
-            self._rs = handshake.rs
-            self._transport = WANoiseTransport(stream, result[0], result[1])
-            self._machine.finish()
-            return True
-        else:
+        try:
+            result = handshake.perform(client_config, stream, s, rs)
+            if result is not None:
+                self._rs = handshake.rs
+                self._transport = WANoiseTransport(stream, result[0], result[1])
+                self._machine.finish()
+            else:
+                raise HandshakeFailedException("No cipherstates")
+        except HandshakeFailedException as e:
             self._machine.fail()
-
-        return False
+            raise
 
     def reset(self):
         self._machine.reset()

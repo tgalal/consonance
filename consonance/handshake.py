@@ -15,6 +15,8 @@ from dissononce.dh.x25519.public import PublicKey
 from dissononce.dh.private import PrivateKey
 from dissononce.dh.x25519.x25519 import X25519DH
 from dissononce.extras.dh.dangerous.dh_nogen import NoGenDH
+from dissononce.exceptions.decrypt import DecryptFailedException
+from google.protobuf.message import DecodeError
 
 from .dissononce_extras.processing.symmetricstate_wa import WASymmetricState
 from .proto import wa20_pb2
@@ -24,6 +26,7 @@ from .exceptions.new_rs_exception import NewRemoteStaticException
 from .config.client import ClientConfig
 from .structs.publickey import PublicKey
 from .util.byte import ByteUtil
+from.exceptions.handshake_failed_exception import HandshakeFailedException
 
 import logging
 
@@ -75,15 +78,22 @@ class WAHandshake(object):
         dissononce_rs = PublicKey(rs.data) if rs else None
         client_payload = self._create_full_payload(client_config)
         logger.debug("Create client_payload=%s" % client_payload)
-        if rs is not None:
-            try:
-                cipherstatepair = self._start_handshake_ik(stream, client_payload, dissononce_s, dissononce_rs)
-            except NewRemoteStaticException as ex:
-               cipherstatepair = self._switch_handshake_xxfallback(stream, dissononce_s, client_payload, ex.server_hello)
-        else:
-            cipherstatepair = self._start_handshake_xx(stream, client_payload, dissononce_s)
+        try:
+            if rs is not None:
+                try:
+                    cipherstatepair = self._start_handshake_ik(stream, client_payload, dissononce_s, dissononce_rs)
+                except NewRemoteStaticException as ex:
+                   cipherstatepair = self._switch_handshake_xxfallback(stream, dissononce_s, client_payload, ex.server_hello)
+            else:
+                cipherstatepair = self._start_handshake_xx(stream, client_payload, dissononce_s)
 
-        return cipherstatepair
+            return cipherstatepair
+        except DecryptFailedException as e:
+            logger.exception(e)
+            raise HandshakeFailedException(e)
+        except DecodeError as e:
+            logger.exception(e)
+            raise HandshakeFailedException(e)
 
     @property
     def rs(self):
@@ -182,7 +192,7 @@ class WAHandshake(object):
         incoming_handshakemessage.ParseFromString(stream.read_segment())
 
         if not incoming_handshakemessage.HasField("server_hello"):
-            raise ValueError("Handshake message does not contain server hello!")
+            raise HandshakeFailedException("Handshake message does not contain server hello!")
 
         server_hello = incoming_handshakemessage.server_hello
 

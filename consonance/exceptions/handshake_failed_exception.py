@@ -1,0 +1,2 @@
+class HandshakeFailedException(Exception):
+    pass
