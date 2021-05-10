@@ -12,7 +12,7 @@ class AppVersionConfig(object):
         :type version: str
         """
         dissected = version.split('.')
-        assert len(dissected) > 3, "version must be in format x.y.z"
+        assert len(dissected) > 3, "version must be in format x.y.z.l"
         self._primary, self._secondary, self._tertiary, self._quaternary = map(lambda v:int(v), dissected)
 
     def __str__(self):
