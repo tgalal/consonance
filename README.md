@@ -84,19 +84,22 @@ import socket
 wa_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 wa_socket.connect(("e1.whatsapp.net", 443))
 # send WA header indicating protocol version
-wa_socket.send(b"WA\x02\x01")
+wa_socket.send(b"WA\x04\x00")
 # use WASegmentedStream for sending/receiving in frames
 wa_socket_stream = WASegmentedStream(SocketArbitraryStream(wa_socket))
-# initialize WANoiseProtocol 2.1
-wa_noiseprotocol = WANoiseProtocol(2, 1)
+# initialize WANoiseProtocol
+wa_noiseprotocol = WANoiseProtocol(4, 0)
 # start the protocol, this should perform a XX handshake since
 # we are not passing the remote static public key
-if wa_noiseprotocol.start(wa_socket_stream, client_config, keypair):
+try:
+    wa_noiseprotocol.start(wa_socket_stream, client_config, keypair)
     print("Handshake completed, checking authentication...")
     # we are now in transport phase, first incoming data
     # will indicate whether we are authenticated
     first_transport_data = wa_noiseprotocol.receive()
-    assert first_transport_data == 172
+    assert first_transport_data == 51
+except:
+    print("Handshake failed")
 ```
 
 - See [examples/walogin_handshake_xx.py](examples/walogin_handshake_xx.py) for the full ```XX``` handshake example.

@@ -29,14 +29,15 @@ CONFIG = ClientConfig(
     username=USERNAME,
     passive=True,
     useragent=SamsungS9PUserAgentConfig(
-        app_version="2.19.51",
+        app_version="2.21.21.18",
         phone_id=PHONE_ID
     ),
     pushname="consonance",
     short_connect=True
 )
+PROTOCOL_VERSION = (4, 0)
 ENDPOINT = ("e1.whatsapp.net", 443)
-HEADER = b"WA\x02\x01"
+HEADER = b"WA" + bytes(PROTOCOL_VERSION)
 
 if __name__ == "__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -45,24 +46,25 @@ if __name__ == "__main__":
     s.send(HEADER)
     # use WASegmentedStream for sending/receiving in frames
     stream = WASegmentedStream(SocketArbitraryStream(s))
-    # initialize WANoiseProtocol 2.1
-    wa_noiseprotocol = WANoiseProtocol(2, 1)
+    # initialize WANoiseProtocol
+    wa_noiseprotocol = WANoiseProtocol(*PROTOCOL_VERSION)
     # start the protocol, this should a XX handshake since
     # we are not passing the remote static public key
-    if wa_noiseprotocol.start(stream, CONFIG, KEYPAIR):
+    try:
+        wa_noiseprotocol.start(stream, CONFIG, KEYPAIR)
         print("Handshake completed, checking authentication...")
         # we are now in transport phase, first incoming data
         # will indicate whether we are authenticated
         first_transport_data = wa_noiseprotocol.receive()
-        # fourth byte is status, 172 is success, 52 is failure
-        if first_transport_data[3] == 172:
+        # fourth + fifth byte are status, [237, 38] is failure
+        if first_transport_data[3] == 51:
             print("Authentication succeeded")
-        elif first_transport_data[3] == 52:
+        elif list(first_transport_data[3:5]) == [237, 38]:
             print("Authentication failed")
             sys.exit(1)
         else:
             print("Unrecognized authentication response: %s" % (first_transport_data[3]))
             sys.exit(1)
-    else:
+    except:
         print("Handshake failed")
         sys.exit(1)
