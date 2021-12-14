@@ -12,8 +12,10 @@ class AppVersionConfig(object):
         :type version: str
         """
         dissected = version.split('.')
-        assert len(dissected) > 3, "version must be in format x.y.z.l"
-        self._primary, self._secondary, self._tertiary, self._quaternary = map(lambda v:int(v), dissected)
+        padded = dissected + ['0'] * (4 - len(dissected))
+        assert len(padded) == 4, "%s is not a valid version" % version
+
+        self._primary, self._secondary, self._tertiary, self._quaternary = map(lambda v:int(v), padded)
 
     def __str__(self):
         return self.STR_TEMPLATE.format(
