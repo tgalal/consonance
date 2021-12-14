@@ -274,6 +274,7 @@ class WAHandshake(object):
         user_agent_app_version.primary = client_config.useragent.app_version.primary
         user_agent_app_version.secondary = client_config.useragent.app_version.secondary
         user_agent_app_version.tertiary = client_config.useragent.app_version.tertiary
+        user_agent_app_version.quaternary = client_config.useragent.app_version.quaternary
 
         user_agent.app_version.MergeFrom(user_agent_app_version)
 
