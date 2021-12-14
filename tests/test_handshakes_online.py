@@ -8,6 +8,7 @@ import uuid
 import socket
 import unittest
 
+PROTOCOL_VERSION = (4, 0)
 
 class HandshakesTest(unittest.TestCase):
     USERNAME = 123456789
@@ -17,7 +18,7 @@ class HandshakesTest(unittest.TestCase):
         username=USERNAME,
         passive=True,
         useragent=VBoxUserAgentConfig(
-            app_version="2.19.51",
+            app_version="2.20.206.24",
             phone_id=PHONE_ID,
             mcc="000",
             mnc="000",
@@ -26,7 +27,7 @@ class HandshakesTest(unittest.TestCase):
         short_connect=True
     )
     ENDPOINT = ("e1.whatsapp.net", 443)
-    HEADER = b"WA\x02\x01"
+    HEADER = b"WA" + bytes(PROTOCOL_VERSION)
 
     def test_xx_handshake(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,13 +36,13 @@ class HandshakesTest(unittest.TestCase):
         s.send(self.HEADER)
         # use WASegmentedStream for sending/receiving in frames
         stream = WASegmentedStream(SocketArbitraryStream(s))
-        # initialize WANoiseProtocol 2.1
-        wa_noiseprotocol = WANoiseProtocol(2, 1)
+        # initialize WANoiseProtocol
+        wa_noiseprotocol = WANoiseProtocol(*PROTOCOL_VERSION)
         # start the protocol, this should a XX handshake since
         # we are not passing the remote static public key
-        self.assertTrue(wa_noiseprotocol.start(stream, self.CONFIG, self.KEYPAIR))
+        wa_noiseprotocol.start(stream, self.CONFIG, self.KEYPAIR)
         # we are now in transport phase, first incoming data
         # will indicate whether we are authenticated
         first_transport_data = wa_noiseprotocol.receive()
-        # fourth byte is status, 172 is success, 52 is failure
-        self.assertEqual(52, first_transport_data[3])
+        # fourth + fifth byte are status, [237, 38] is failure
+        self.assertEqual(b'\xed\x26', first_transport_data[3:5])
