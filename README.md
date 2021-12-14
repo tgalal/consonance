@@ -5,8 +5,8 @@ and SHA256 from Noise Protocol.
 
 ## META-INF
 ```
-consonance version: 0.1.3
-released: 2019-05-22
+consonance version: 0.1.5
+released: 2021-12-14
 requires:
 - python>=2.5,<=3.7
 - dissononce >= 0.34.3
